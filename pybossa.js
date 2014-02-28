@@ -25,9 +25,13 @@ if (typeof(console) == 'undefined') {
 
 (function( pybossa, $, undefined ) {
     var url = '/';
-
+    var user_facebook_id = "";
 
     // Private methods
+    function initUserFacebookId(userId) {
+        user_facebook_id = userId;
+    }
+
     function getApp(appname){
         return $.ajax({
             url: url + 'api/app',
@@ -39,13 +43,28 @@ if (typeof(console) == 'undefined') {
         } );
     }
 
-    function getTaskRun( app ) {
+    function addFacebookParameters(restParameters) {
+        if (user_facebook_id != "") {
+            var connector = restParameters.length == 0 ? "" : "&";
+            restParameters += connector + "facebook_user_id="
+                    + user_facebook_id
+        }
+        return restParameters;
+    }
+
+    function getTaskRun(app) {
+        var restParameters = "";
+        restParameters = addFacebookParameters(restParameters);
+
         return $.ajax({
-            url: url + 'api/app/' + app.id + '/newtask',
-            dataType: 'json'
-        })
-        .pipe( function( data ) {
-            taskrun = { question: app.description, task: data};
+            url : url + 'api/app/' + app.id + '/newtask',
+            data : restParameters,
+            dataType : 'json'
+        }).pipe(function(data) {
+            taskrun = {
+                question : app.description,
+                task : data
+            };
             return taskrun;
         });
     }
@@ -70,6 +89,11 @@ if (typeof(console) == 'undefined') {
             'info': data.answer
         };
 
+        if (user_facebook_id.length != 0) {
+            taskrun = $.extend(taskrun, {
+                'facebook_user_id' : user_facebook_id
+            });
+        }
         taskrun = JSON.stringify(taskrun);
 
         return $.ajax({
@@ -98,10 +122,14 @@ if (typeof(console) == 'undefined') {
         return false;
     }
 
-    function userProgress( appname ) {
+    function userProgress(appname) {
+        var restParameters = "";
+        restParameters = addFacebookParameters(restParameters);
+
         return $.ajax({
-            url: url + 'api/app/' + appname + '/userprogress',
-            dataType: 'json'
+            url : url + 'api/app/' + appname + '/userprogress',
+            data: restParameters,
+            dataType : 'json',
         });
     }
 
@@ -246,9 +274,31 @@ if (typeof(console) == 'undefined') {
         return url;
     }
 
-     // Changed by thyago.silva@ccc.ufcg.edu.br
-    pybossa.getCurrentUserId = function ( appname ){
-        return getCurrentUserId( appname );
+    pybossa.getCurrentUserId = function(callback) {
+        var restParameters = "";
+        restParameters = addFacebookParameters(restParameters);
+
+        var response = $.ajax({
+            url : url + 'api/app/get_current_user_id',
+            data : restParameters,
+            dataType : 'json'
+        }).pipe(function(response) {
+            callback(response.current_user_id);
+        });
+    }
+
+    pybossa.authenticateFacebookUser = function(authData, callback) {
+        restParameters = JSON.stringify(authData);
+        return $.ajax({
+            type : 'POST',
+            url : url + 'api/user/authenticate_facebook_user',
+            data : restParameters,
+            contentType : 'application/json',
+            dataType : 'json'
+        }).pipe(function (response) {
+            initUserFacebookId(authData.facebook_user_id);
+            callback(response);
+        });
     }
 
 } ( window.pybossa = window.pybossa || {}, jQuery ));
