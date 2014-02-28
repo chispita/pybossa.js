@@ -105,6 +105,14 @@ if (typeof(console) == 'undefined') {
         });
     }
 
+    function getSettings() {
+        return $.ajax({
+            url: url + 'api/settings',
+            dataType: 'json',
+        });
+    }
+
+
     // fallback for user defined action
     function __taskLoaded (task, deferred) {
         deferred.resolve(task);
@@ -204,6 +212,10 @@ if (typeof(console) == 'undefined') {
 
     pybossa.userProgress = function ( appname ) {
         return userProgress( appname );
+    };
+
+    pybossa.getSettings = function () {
+        return getSettings()
     };
 
     pybossa.run = function ( appname ) {
