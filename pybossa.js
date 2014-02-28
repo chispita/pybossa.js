@@ -112,6 +112,13 @@ if (typeof(console) == 'undefined') {
         });
     }
 
+     // Changed by thyago.silva@ccc.ufcg.edu.br
+    function getCurrentUserId( appname ) {
+        return $.ajax({
+            url : url + 'api/app/' + appname + '/currentuserid',
+            dataType: 'json',
+        });
+    }
 
     // fallback for user defined action
     function __taskLoaded (task, deferred) {
@@ -237,6 +244,11 @@ if (typeof(console) == 'undefined') {
         }
         url = endpoint;
         return url;
+    }
+
+     // Changed by thyago.silva@ccc.ufcg.edu.br
+    pybossa.getCurrentUserId = function ( appname ){
+        return getCurrentUserId( appname );
     }
 
 } ( window.pybossa = window.pybossa || {}, jQuery ));
